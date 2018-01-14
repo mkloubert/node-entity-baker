@@ -212,6 +212,7 @@ export const TYPE_INT = 'int';
 export const TYPE_INT32 = 'int32';
 export const TYPE_INTEGER = 'integer';
 export const TYPE_INT64 = 'int64';
+export const TYPE_JSON = 'json';
 export const TYPE_STR = 'str';
 export const TYPE_STRING = 'string';
 
@@ -425,11 +426,28 @@ export class EntityCompiler {
                                     ('' === PHP_NAMESPACE ? '' : "\\") + 
                                     CLASS_NAME;
 
-        const TO_DOCTRINE_TYPE = (type: any): string => {
-            type = eb_lib_helpers.normalizeString(type);
+        const IS_AUTO = (col: string) => {
+            return eb_lib_helpers.toBooleanSafe(
+                context.columns[col].auto
+            );
+        };
+
+        const IS_ID = (col: string) => {
+            return eb_lib_helpers.toBooleanSafe(
+                context.columns[col].id
+            );
+        };
+
+        const IS_JSON = (col: string) => {
+            return TYPE_JSON === eb_lib_helpers.normalizeString(
+                context.columns[col].type
+            );
+        };
+
+        const TO_DOCTRINE_TYPE = (col: string): string => {
+            let type = eb_lib_helpers.normalizeString( context.columns[col].type );
 
             switch (type) {
-                case TYPE__DEFAULT:
                 case TYPE_STR:
                 case TYPE_STRING:
                     type = 'string';
@@ -441,9 +459,20 @@ export class EntityCompiler {
                     type = 'integer';
                     break;
 
+                case TYPE_JSON:
+                    type = 'string';
+                    break;
+
                 case TYPE_BIGINT:
                 case TYPE_INT64:
                     type = 'bigint';
+                    break;
+
+                case TYPE__DEFAULT:
+                    type = 'string';
+                    if (IS_ID(col)) {
+                        type = 'integer';
+                    }
                     break;
 
                 default:
@@ -451,18 +480,6 @@ export class EntityCompiler {
             }
 
             return type;
-        };
-
-        const IS_AUTO = (col: string) => {
-            return eb_lib_helpers.toBooleanSafe(
-                context.columns[col].auto
-            );
-        };
-
-        const IS_ID = (col: string) => {
-            return eb_lib_helpers.toBooleanSafe(
-                context.columns[col].id
-            );
         };
 
         let dbTable = eb_lib_helpers.toStringSafe(context.entity.table).trim();
@@ -520,6 +537,12 @@ export class EntityCompiler {
                       TRAIT_FILENAME)
         );
 
+        const XML_FILENAME = `${context.namespace.concat(CLASS_NAME).join('.')}.dcm.xml`;
+        const XML_FILE_PATH = Path.resolve(
+            Path.join(outDir,
+                      XML_FILENAME)
+        );
+
         classFile += `/**
  * @Entity @Table(name="${dbTable}")
  **/
@@ -553,7 +576,7 @@ class ${CLASS_NAME} {
             const COLUMN = context.columns[C];
 
             classFile += `
-    /**${IS_ID(C) ? ' @Id' : ''} @Column(type="${TO_DOCTRINE_TYPE(COLUMN.type)}")${IS_AUTO(C) ? ' @GeneratedValue' : ''} **/
+    /**${IS_ID(C) ? ' @Id' : ''} @Column(type="${TO_DOCTRINE_TYPE(C)}")${IS_AUTO(C) ? ' @GeneratedValue' : ''} **/
     protected $` + C+ `;`;
         }
 
@@ -583,7 +606,17 @@ class ${CLASS_NAME} {
      **/
     public function ${GETTER_NAME}() {
         $valueToReturn = $this->${C};
+`;
 
+        if (IS_JSON(C)) {
+            classFile += `
+        if (null !== $valueToReturn) {
+            $valueToReturn = \\json_decode($valueToReturn, true);
+        }
+`;
+        }
+
+        classFile += `
         // check if we have a
         // 'onBeforeGet($columnName, &$valueToReturn)'
         // method in './Extensions/${TRAIT_FILENAME}'
@@ -610,14 +643,24 @@ class ${CLASS_NAME} {
      **/
     public function ${SETTER_NAME}($newValue) {
         $oldValue = $this->${C};
+`;
 
+                if (IS_JSON(C)) {
+                    classFile += `
+        if (null !== $newValue) {
+            $newValue = \\json_encode($newValue);
+        }
+`;
+                }
+
+                classFile += `
         $doSet = true;
 
         // 'onBeforeSet($columnName, &$newValue)'
         // method in './Extensions/${TRAIT_FILENAME}'?
         if (\\method_exists($this, 'onBeforeSet')) {
             $doSet = FALSE !== $this->onBeforeSet('${C}', $newValue);
-        }        
+        }
 
         if ($doSet) {
             $this->${C} = $newValue;
@@ -628,12 +671,12 @@ class ${CLASS_NAME} {
                 $this->onSet('${C}', $newValue, $oldValue);
             }
         }
-        
+
         // 'onSetComplete($columnName, $hasBeenSet, $currentValue, $oldValue, $newValue)'
         // method in './Extensions/${TRAIT_FILENAME}'?
         if (\\method_exists($this, 'onSetComplete')) {
             $this->onSetComplete('${C}', $doSet, $this->${C}, $oldValue, $newValue);
-        }        
+        }
 
         return $this;
     }`;                
@@ -793,7 +836,7 @@ trait ${TRAIT_NAME} {
      **/
     protected function onBeforeGet($columnName, &$valueToReturn) {
     }
-    
+
     /**
      * An optional method, that is invoked in a setter
      * BEFORE a value is going to be set / changed.
@@ -806,7 +849,7 @@ trait ${TRAIT_NAME} {
      **/
     protected function onBeforeSet($columnName, &$valueToSet, $currentValue) {        
     }
-    
+
     /**
      * An optional method, that is invoked in a setter
      * if a column value has been set / changed.
@@ -837,6 +880,52 @@ trait ${TRAIT_NAME} {
 
             await eb_lib_helpers.writeFile(TRAIT_FILE_PATH, traitFile, 'utf8');
         }
+
+        const COLUMNS_FOR_XML = Enumerable.from( context.columnNames ).orderBy(cn => {
+            return IS_ID(cn) ? 0 : 1;
+        }).thenBy(cn => {
+            return eb_lib_helpers.normalizeString(cn);
+        }).toArray();
+
+        let xmlFile = '';
+        xmlFile += `<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  http://raw.github.com/doctrine/doctrine2/master/doctrine-mapping.xsd">
+    <entity name="${context.namespace.join('\\')}\\${CLASS_NAME}" table="${dbTable}">
+`;
+
+        for (const C of COLUMNS_FOR_XML) {
+            const COLUMN = context.columns[C];
+            const TYPE = TO_DOCTRINE_TYPE(C);
+
+            if (IS_ID(C)) {
+                xmlFile += `
+        <id name="${C}" type="${TYPE}"`;
+
+                if (IS_AUTO(C)) {
+                    xmlFile += `>
+            <generator strategy="AUTO" />
+        `;
+
+                    xmlFile += `</id>`;
+                }
+                else {
+                    xmlFile += ` />`;
+                }
+            }
+            else {
+                xmlFile += `
+        <field name="${C}" type="${TYPE}" />`;
+            }
+        }
+
+        xmlFile += `
+
+    </entity>
+</doctrine-mapping>`;
+
+        await eb_lib_helpers.writeFile(XML_FILE_PATH, xmlFile, 'utf8');
     }
 
     /**
