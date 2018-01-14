@@ -808,10 +808,11 @@ trait ${TRAIT_NAME} {
      * 
      * @param string $columnName The name of the column.
      * @param mixed &$valueToSet The value to set.
+     * @param mixed $currentValue The current value.
      * 
      * @return void|false If FALSE, the value will NOT be set.
      **/
-    protected function onBeforeSet($columnName, &$valueToSet) {        
+    protected function onBeforeSet($columnName, &$valueToSet, $currentValue) {        
     }
     
     /**
