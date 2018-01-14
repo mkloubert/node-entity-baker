@@ -1,2 +1,3 @@
-# entity-baker
-Generates simple and powerful entity classes for ORM systems, like Doctrine and/or Entity Framework.
+# node-entity-baker
+
+[Node.js](https://nodejs.org) application, which generates simple and powerful entity classes for [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping) systems, like [Doctrine](http://www.doctrine-project.org) and/or [Entity Framework](https://docs.microsoft.com/en-us/ef/), wriiten in [TypeScript](https://www.typescriptlang.org).
