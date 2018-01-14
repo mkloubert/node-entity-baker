@@ -833,7 +833,7 @@ trait ${TRAIT_NAME} {
      * @param boolean $hasBeenSet The value has been set / changed or not.
      * @param mixed $currentValue The current column value.
      * @param mixed $oldValue The old value.
-     * @param mixed $valueToSet The current value of $newValue parameter of setter.
+     * @param mixed $newValue The current value of $newValue parameter of setter.
      **/
     protected function onSetComplete($columnName, $hasBeenSet, $currentValue, $oldValue, $newValue) {
     }
