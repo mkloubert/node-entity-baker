@@ -10,7 +10,14 @@
             "problemMatcher": [
                 "$tsc-watch"
             ],
-            "isBackground": true
+            "isBackground": true,
+            "presentation": {
+                "reveal": "never"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
         }
     ]
 }

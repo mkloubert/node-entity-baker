@@ -1,4 +1,6 @@
 /node_modules
 /**/*.map
 /**/*.js
+/out
+/entities.json
 /pushall.sh

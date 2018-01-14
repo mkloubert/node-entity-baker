@@ -1,4 +1,6 @@
 /**/*.map
 /**/*.ts
-.vscode
+/out
+/.vscode
+/entities.json
 /pushall.sh
