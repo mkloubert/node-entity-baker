@@ -740,14 +740,6 @@ class ${CLASS_NAME} {
         $setters = $this->get_setters();
 
         if ($columnsToSet) {
-            $arr = $columnsToSet;
-            if (!\\is_array($arr)) {
-                $arr = [];
-                foreach ($columnsToSet as $columnName => $newValue) {
-                    $arr[ (string)$columnName ] = $newValue;
-                }
-            }
-
             foreach ($columnsToSet as $columnName => $newValue) {
                 $setters[ \\trim($columnName) ]( $newValue );
             }
