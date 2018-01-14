@@ -629,10 +629,10 @@ class ${CLASS_NAME} {
             }
         }
         
-        // 'onSetComplete($columnName, $hasBeenSet, $currentValue, $oldValue)'
+        // 'onSetComplete($columnName, $hasBeenSet, $currentValue, $oldValue, $newValue)'
         // method in './Extensions/${TRAIT_FILENAME}'?
         if (\\method_exists($this, 'onSetComplete')) {
-            $this->onSetComplete('${C}', $doSet, $this->${C}, $oldValue);
+            $this->onSetComplete('${C}', $doSet, $this->${C}, $oldValue, $newValue);
         }        
 
         return $this;
@@ -831,10 +831,11 @@ trait ${TRAIT_NAME} {
      * 
      * @param string $columnName The name of the column.
      * @param boolean $hasBeenSet The value has been set / changed or not.
-     * @param mixed $currentValue The current value.
+     * @param mixed $currentValue The current column value.
      * @param mixed $oldValue The old value.
+     * @param mixed $valueToSet The current value of $newValue parameter of setter.
      **/
-    protected function onSetComplete($columnName, $hasBeenSet, $currentValue, $oldValue) {
+    protected function onSetComplete($columnName, $hasBeenSet, $currentValue, $oldValue, $newValue) {
     }
 `;
             
