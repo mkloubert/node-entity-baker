@@ -17,6 +17,7 @@
 
 import * as eb_lib_doctrine from './doctrine';
 import * as eb_lib_ef from './ef';
+import * as eb_lib_ef_core from './efcore';
 import * as eb_lib_helpers from './helpers';
 import * as Enumerable from 'node-enumerable';
 import * as FSExtra from 'fs-extra';
@@ -376,6 +377,7 @@ export class EntityCompiler {
                         break;
 
                     case EntityFramework.EntityFrameworkCore:
+                        generator = eb_lib_ef_core.generateClassForEntityFrameworkCore;
                         break;
                 }
 
