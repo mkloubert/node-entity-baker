@@ -218,6 +218,18 @@ export function globSync(pattern: string, options?: Glob.IOptions): string[] {
 }
 
 /**
+ * Checks if a value is a boolean.
+ * 
+ * @param {any} val The value to check.
+ * 
+ * @return {boolean} Is boolean.
+ */
+export function isBool(val: any): val is boolean {
+    return !isNullOrUndefined(val) &&
+           'boolean' === typeof val;
+}
+
+/**
  * Checks if the string representation of a value is an empty string
  * or contains whitespaces only.
  * 
@@ -288,6 +300,18 @@ export function isObj<TObj extends Object = Object>(val: any): val is TObj {
 export function isString(val: any): val is string {
     return !isNullOrUndefined(val) &&
            'string' === typeof val;
+}
+
+/**
+ * Checks if a value is a symbol.
+ * 
+ * @param {any} val The value to check.
+ * 
+ * @return {boolean} Is symbol.
+ */
+export function isSymbol<TSymbol extends Symbol = Symbol>(val: any): val is TSymbol {
+    return !isNullOrUndefined(val) &&
+           'symbol' === typeof val;
 }
 
 /**
@@ -379,8 +403,26 @@ export function replaceAll(val: any, searchFor: any, replaceWith: any): string {
  * @return {boolean} The converted value.
  */
 export function toBooleanSafe(val: any, defaultValue: any = false): boolean {
-    if (isNullOrUndefined(val)) {
+    if (isBool(val)) {
+        return val;
+    }
+
+    if (isEmptyString(val)) {
         return !!defaultValue;
+    }
+
+    switch (normalizeString(val)) {
+        case '0':
+        case 'false':
+        case 'n':
+        case 'no':
+            return false;
+
+        case '1':
+        case 'true':
+        case 'y':
+        case 'yes':
+            return true;
     }
 
     return !!val;

@@ -21,6 +21,7 @@ import * as Enumerable from 'node-enumerable';
 import * as FS from 'fs';
 import * as Minimist from 'minimist';
 import * as Path from 'path';
+import * as YAML from 'yamljs';
 
 
 interface AppSettings {
@@ -190,111 +191,125 @@ const NEXT_FILE = function (err?: any) {
     try {
         const EF = ENTITY_FILES.shift();
 
-        const ENTITY_FILE_OBJ: eb_lib_compiler.EntityFile = JSON.parse(
-            FS.readFileSync(EF, 'utf8')
-        );
-        if (!eb_lib_helpers.isObj<eb_lib_compiler.EntityFile>(ENTITY_FILE_OBJ)) {
-            NEXT_FILE(null);
-            return;
+        let entityFileLoader: () => PromiseLike<eb_lib_compiler.EntityFile> = async () => {
+            return JSON.parse(
+                (await eb_lib_helpers.readFile(EF)).toString('utf8')
+            );
+        };
+        if ('.yaml' === Path.extname(EF)) {
+            entityFileLoader = async () => {
+                return YAML.parse(
+                    (await eb_lib_helpers.readFile(EF)).toString('utf8')
+                );
+            };
         }
 
-        eb_lib_helpers.write_ln(`Compiling entities of '${EF}'... `);
-        try {
-            const OUT_DIRS = outDirs.map(d => d);
-            const NEXT_DIR = () => {
-                if (OUT_DIRS.length < 1) {
-                    DIR_COMPLETED(null);
-                    return;
-                }
+        entityFileLoader().then((entityFileObject) => {
+            if (!eb_lib_helpers.isObj<eb_lib_compiler.EntityFile>(entityFileObject)) {
+                NEXT_FILE(null);
+                return;
+            }
 
-                try {
-                    const OD = OUT_DIRS.shift();
-                    
-                    const ENTITY_FRAMEWORKS = frameworks.map(f => f);
-                    const NEXT_TARGET = () => {
-                        if (ENTITY_FRAMEWORKS.length < 1) {
-                            DIR_COMPLETED(null);
-                            return;
-                        }
+            eb_lib_helpers.write_ln(`Compiling entities of '${EF}'... `);
+            try {
+                const OUT_DIRS = outDirs.map(d => d);
+                const NEXT_DIR = () => {
+                    if (OUT_DIRS.length < 1) {
+                        DIR_COMPLETED(null);
+                        return;
+                    }
 
-                        const TARGET_COMPLETED = (err: any) => {
-                            if (err) {                    
-                                eb_lib_helpers.write_ln(`\t[ERROR] '${eb_lib_helpers.toStringSafe(err)}'`);
+                    try {
+                        const OD = OUT_DIRS.shift();
+                        
+                        const ENTITY_FRAMEWORKS = frameworks.map(f => f);
+                        const NEXT_TARGET = () => {
+                            if (ENTITY_FRAMEWORKS.length < 1) {
+                                DIR_COMPLETED(null);
+                                return;
                             }
-                            else {
-                                eb_lib_helpers.write_ln(`\t[OK]`);
-                            }
-                    
-                            NEXT_DIR();
-                        };
 
-                        try {
-                            const EF = ENTITY_FRAMEWORKS.shift();
-
-                            let outDir = OD;
-                            if (frameworks.length > 1) {
-                                switch (EF) {
-                                    case eb_lib_compiler.EntityFramework.Doctrine:
-                                        outDir = Path.join(outDir, 'doctrine');
-                                        break;
-
-                                    case eb_lib_compiler.EntityFramework.EntityFramework:
-                                        outDir = Path.join(outDir, 'ef');
-                                        break;
-
-                                    case eb_lib_compiler.EntityFramework.EntityFrameworkCore:
-                                        outDir = Path.join(outDir, 'ef-core');
-                                        break;
+                            const TARGET_COMPLETED = (err: any) => {
+                                if (err) {                    
+                                    eb_lib_helpers.write_ln(`\t[ERROR] '${eb_lib_helpers.toStringSafe(err)}'`);
                                 }
-                            }
-                            outDir = Path.resolve(outDir);
+                                else {
+                                    eb_lib_helpers.write_ln(`\t[OK]`);
+                                }
+                        
+                                NEXT_DIR();
+                            };
 
-                            let frameworkName = eb_lib_compiler.EntityFramework[EF];
+                            try {
+                                const EF = ENTITY_FRAMEWORKS.shift();
 
-                            eb_lib_helpers.write_ln(`\tWriting ${frameworkName} entities to '${OD}'... `);
-                            eb_lib_compiler.compile({
-                                cwd: process.cwd(),
-                                file: ENTITY_FILE_OBJ,
-                                outDir: outDir,
-                                target: EF,
-        
-                                callbacks: {
-                                    onBeforeGenerateClass: (className, target) => {
-                                        eb_lib_helpers.write(`\t\tGenerating class '${className}'... `);
-                                    },
-        
-                                    onClassGenerated: (err, className, target) => {
-                                        if (err) {
-                                            eb_lib_helpers.write_ln(`[ERROR: '${eb_lib_helpers.toStringSafe(err)}']`);
-                                        }
-                                        else {
-                                            eb_lib_helpers.write_ln(`[OK]`);
-                                        }
+                                let outDir = OD;
+                                if (frameworks.length > 1) {
+                                    switch (EF) {
+                                        case eb_lib_compiler.EntityFramework.Doctrine:
+                                            outDir = Path.join(outDir, 'doctrine');
+                                            break;
+
+                                        case eb_lib_compiler.EntityFramework.EntityFramework:
+                                            outDir = Path.join(outDir, 'ef');
+                                            break;
+
+                                        case eb_lib_compiler.EntityFramework.EntityFrameworkCore:
+                                            outDir = Path.join(outDir, 'ef-core');
+                                            break;
                                     }
                                 }
-                            }).then(() => {
-                                DIR_COMPLETED(null);
-                            }, (err) => {                        
-                                DIR_COMPLETED(err);
-                            });
-                        }
-                        catch (e) {
-                            TARGET_COMPLETED(e);
-                        }
-                    };
+                                outDir = Path.resolve(outDir);
 
-                    NEXT_TARGET();
-                }
-                catch (e) {
-                    DIR_COMPLETED(e);
-                }
-            };
+                                let frameworkName = eb_lib_compiler.EntityFramework[EF];
 
-            NEXT_DIR();
-        }
-        catch (e) {
-            NEXT_FILE(e);
-        }
+                                eb_lib_helpers.write_ln(`\tWriting ${frameworkName} entities to '${OD}'... `);
+                                eb_lib_compiler.compile({
+                                    cwd: process.cwd(),
+                                    file: entityFileObject,
+                                    outDir: outDir,
+                                    target: EF,
+            
+                                    callbacks: {
+                                        onBeforeGenerateClass: (className, target) => {
+                                            eb_lib_helpers.write(`\t\tGenerating class '${className}'... `);
+                                        },
+            
+                                        onClassGenerated: (err, className, target) => {
+                                            if (err) {
+                                                eb_lib_helpers.write_ln(`[ERROR: '${eb_lib_helpers.toStringSafe(err)}']`);
+                                            }
+                                            else {
+                                                eb_lib_helpers.write_ln(`[OK]`);
+                                            }
+                                        }
+                                    }
+                                }).then(() => {
+                                    DIR_COMPLETED(null);
+                                }, (err) => {                        
+                                    DIR_COMPLETED(err);
+                                });
+                            }
+                            catch (e) {
+                                TARGET_COMPLETED(e);
+                            }
+                        };
+
+                        NEXT_TARGET();
+                    }
+                    catch (e) {
+                        DIR_COMPLETED(e);
+                    }
+                };
+
+                NEXT_DIR();
+            }
+            catch (e) {
+                NEXT_FILE(e);
+            }
+        }, (err) => {
+            NEXT_FILE(err);
+        });        
     }
     catch (e) {
         COMPLETED(e);

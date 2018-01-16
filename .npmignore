@@ -3,4 +3,5 @@
 /out
 /.vscode
 /entities.json
+/entities.yaml
 /pushall.sh
