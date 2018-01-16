@@ -287,7 +287,7 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
 
                     onSetComplete.Invoke(this, args);
                 }
-        }`;            
+            }`;            
         }
         
         classFile += `
