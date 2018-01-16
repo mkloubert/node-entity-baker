@@ -74,7 +74,7 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
 
     const CAN_BE_NULL = (col: string) => {
         return eb_lib_helpers.toBooleanSafe(
-            context.columns[col]['null'], true
+            context.columns[col]['null']
         );
     };
 
