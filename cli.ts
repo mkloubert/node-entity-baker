@@ -33,6 +33,24 @@ interface AppSettings {
 }
 
 
+function showHelp() {
+    eb_lib_helpers.write_ln(`node-entity-baker`);
+    eb_lib_helpers.write_ln(`Syntax:    [entity files ...] [options]`);
+    eb_lib_helpers.write_ln();
+    eb_lib_helpers.write_ln(`Examples:  entity-baker --doctrine`);
+    eb_lib_helpers.write_ln(`           entity-baker /path/to/entities.json --entity-framework`);
+    eb_lib_helpers.write_ln(`           entity-baker my-entities.yaml --ef-core --out=C:/path/to/output/dir`);
+    eb_lib_helpers.write_ln();
+    eb_lib_helpers.write_ln(`Options:`);
+    eb_lib_helpers.write_ln(` -?, --h, --help                              Show this help screen.`);
+    eb_lib_helpers.write_ln(` --d, --doctrine                              Build for Doctrine.`);
+    eb_lib_helpers.write_ln(` --ef, --entity-framework                     Build for Entity Framework.`);
+    eb_lib_helpers.write_ln(` --efc, --ef-core, --entity-framework-core    Build for Entity Framework Core.`);
+    eb_lib_helpers.write_ln(` -o, --out                                    The output directory.`);
+
+    process.exit(2);
+}
+
 const SETTINGS: AppSettings = {
     doctrine: false,
     entityFramework: false,
@@ -42,6 +60,7 @@ const SETTINGS: AppSettings = {
 };
 
 const CMD_ARGS = Minimist( process.argv.slice(2) );
+let showHelpScreen = false;
 for (const A in CMD_ARGS) {
     const ARGS = eb_lib_helpers.asArray(CMD_ARGS[A]);
 
@@ -85,7 +104,21 @@ for (const A in CMD_ARGS) {
         case 'entity-framework-core':
             SETTINGS.entityFrameworkCore = Enumerable.from(ARGS).all(a => eb_lib_helpers.toBooleanSafe(a));
             break;
+
+        case '?':
+        case 'help':
+            showHelpScreen = Enumerable.from(ARGS).all(a => eb_lib_helpers.toBooleanSafe(a));
+            break;
+
+        default:
+            eb_lib_helpers.write_err_ln(`Unknown option '${A}'!`);
+            showHelp();
+            break;
     }
+}
+
+if (showHelpScreen) {
+    showHelp();
 }
 
 SETTINGS.inputFiles = eb_lib_helpers.distinctArray(SETTINGS.inputFiles);
@@ -145,6 +178,10 @@ if (SETTINGS.entityFramework) {
 }
 if (SETTINGS.entityFrameworkCore) {
     frameworks.push(eb_lib_compiler.EntityFramework.EntityFrameworkCore);
+}
+
+if (frameworks.length < 1) {
+    showHelp();
 }
 
 
@@ -237,7 +274,7 @@ const NEXT_FILE = function (err?: any) {
                                     eb_lib_helpers.write_ln(`\t[OK]`);
                                 }
                         
-                                NEXT_DIR();
+                                NEXT_TARGET();
                             };
 
                             try {
@@ -285,9 +322,9 @@ const NEXT_FILE = function (err?: any) {
                                         }
                                     }
                                 }).then(() => {
-                                    DIR_COMPLETED(null);
-                                }, (err) => {                        
-                                    DIR_COMPLETED(err);
+                                    TARGET_COMPLETED(null);
+                                }, (err) => {
+                                    TARGET_COMPLETED(err);
                                 });
                             }
                             catch (e) {

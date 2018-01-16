@@ -181,7 +181,7 @@ class ${CLASS_NAME} {
         if (\\method_exists($this, 'onConstructor')) {
             \\call_user_func_array(
                 [ $this, 'onConstructor' ],
-                \\func_get_args(),
+                \\func_get_args()
             );
         }
     }
@@ -394,12 +394,13 @@ class ${CLASS_NAME} {
      * 
      * @chainable
      **/
-    public set_columns_array($columnsToSet) {
+    public function set_columns_array($columnsToSet) {
         $setters = $this->get_setters();
 
         if ($columnsToSet) {
             foreach ($columnsToSet as $columnName => $newValue) {
-                $setters[ \\trim($columnName) ]( $newValue );
+                \\call_user_func($setters[ \\trim($columnName) ], 
+                                $newValue);
             }
         }
 
