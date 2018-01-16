@@ -145,8 +145,7 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
 `;
 
     classFile += `
-        #region Columns        
-`;
+        #region Columns`;
     for (const C of context.columnNames) {
         const CLR_TYPE = TO_EF_TYPE(C);
         const FIELD_NAME = `_${C}`;
