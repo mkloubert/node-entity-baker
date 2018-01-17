@@ -245,6 +245,7 @@ const NEXT_FILE = function (err?: any) {
                                     return FS.readFileSync(EF, 'utf8');
                                 }
                             }, {
+                                async: true,
                                 explicitArray: false,
                                 explicitRoot: true,
                                 rootName: 'entity_baker',
