@@ -21,6 +21,7 @@ import * as Enumerable from 'node-enumerable';
 import * as FS from 'fs';
 import * as Minimist from 'minimist';
 import * as Path from 'path';
+import * as XML from 'xml2js';
 import * as YAML from 'yamljs';
 
 
@@ -233,12 +234,47 @@ const NEXT_FILE = function (err?: any) {
                 (await eb_lib_helpers.readFile(EF)).toString('utf8')
             );
         };
-        if ('.yaml' === Path.extname(EF)) {
-            entityFileLoader = async () => {
-                return YAML.parse(
-                    (await eb_lib_helpers.readFile(EF)).toString('utf8')
-                );
-            };
+        
+        switch (Path.extname(EF)) {
+            case '.xml':
+                entityFileLoader = () => {
+                    return new Promise<eb_lib_compiler.EntityFile>((resolve, reject) => {
+                        try {
+                            XML.parseString({
+                                toString: () => {
+                                    return FS.readFileSync(EF, 'utf8');
+                                }
+                            }, {
+                                explicitArray: false,
+                                explicitRoot: true,
+                                rootName: 'entity_baker',
+                            }, (err, xml) => {
+                                if (err) {
+                                    reject(err);
+                                }
+                                else {
+                                    if (xml) {
+                                        xml = xml['entity_baker'];
+                                    }
+                                    
+                                    resolve(xml);
+                                }
+                            });
+                        }
+                        catch (e) {
+                            reject(e);
+                        }
+                    });
+                };
+                break;
+
+            case '.yaml':
+                entityFileLoader = async () => {
+                    return YAML.parse(
+                        (await eb_lib_helpers.readFile(EF)).toString('utf8')
+                    );
+                };
+                break;
         }
 
         entityFileLoader().then((entityFileObject) => {

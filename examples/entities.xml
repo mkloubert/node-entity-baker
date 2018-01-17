@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<entity_baker>
+	<namespace>MarcelJoachimKloubert.Database</namespace>
+	<entities>
+		<User>
+			<table>users</table>
+			<columns>
+				<id>
+					<id>true</id>
+					<auto>true</auto>
+					<type>int32</type>
+				</id>
+				<name>string</name>
+				<email>string</email>
+				<context>json</context>
+			</columns>
+		</User>
+	</entities>
+</entity_baker>

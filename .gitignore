@@ -3,5 +3,6 @@
 /**/*.js
 /out
 /entities.json
+/entities.xml
 /entities.yaml
 /pushall.sh
