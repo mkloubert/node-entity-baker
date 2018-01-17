@@ -418,7 +418,7 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
         const CLR_TYPE = TO_EF_TYPE(C);
 
         classFile += `
-                { "${C}", (v) => { this.${S} = (${CLR_TYPE})v; return this; } },`;
+                { "${C}", (v) => { this.${S} = _Helpers.ConvertTo<${CLR_TYPE}>(v); return this; } },`;
     }
 
     classFile += `
