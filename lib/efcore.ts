@@ -135,13 +135,50 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
 `;
     }
 
-    classFile += `    [global::System.Runtime.Serialization.DataContract]
-    [global::System.Serializable]
-    /// <summary>
+    classFile += `    /// <summary>
     /// An enity for '${dbTable}' table.
     /// </summary>
+    [global::System.Runtime.Serialization.DataContract]
+    [global::System.Serializable]
     public partial class ${CLASS_NAME} : global::System.MarshalByRefObject, global::System.ComponentModel.INotifyPropertyChanged, global::System.ComponentModel.INotifyPropertyChanging
     {
+
+        #region CLASS: _Helpers
+
+        private static class _Helpers
+        {
+            internal static T ConvertTo<T>(object obj)
+            {
+                if (null != obj)
+                {
+                    if (!(obj is T))
+                    {
+                        return (T)global::System.Convert.ChangeType(obj, typeof(T));
+                    }
+
+                    return (T)obj;
+                }
+
+                return default(T);
+            }
+
+            internal static object[] PrepareMethodArgs(global::System.Reflection.MethodInfo method, global::System.Collections.IEnumerable args)
+            {
+                if (null != args)
+                {
+                    var p = method.GetParameters();
+
+                    args = args.Cast<object>()
+                               .Take(p.Length)
+                               .ToArray();
+                }
+
+                return null;
+            }
+        }
+
+        #endregion
+
 `;
 
     classFile += `
@@ -166,10 +203,10 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
         #region Events        
 
         /// <inheritdoc />
-        public event global::System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
+        public virtual event global::System.ComponentModel.PropertyChangedEventHandler PropertyChanged;
 
         /// <inheritdoc />
-        public event global::System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
+        public virtual event global::System.ComponentModel.PropertyChangingEventHandler PropertyChanging;
 
         #endregion
 `;    
@@ -211,10 +248,15 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
                                                       global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.NonPublic | global::System.Reflection.BindingFlags.Instance);
                 if (null != onBeforeGet)
                 {
-                    var args = new object[] { "${C}", valueToReturn };
+                    var args = _Helpers.PrepareMethodArgs(onBeforeGet,
+                                                          new object[] { "${C}", valueToReturn });
+
                     onBeforeGet.Invoke(this, args);
 
-                    valueToReturn = (${CLR_TYPE})args[1];
+                    if (args.Length > 1)
+                    {
+                        valueToReturn = _Helpers.ConvertTo<${CLR_TYPE}>(args[1]);
+                    }                    
                 }
 
                 return valueToReturn;
@@ -241,11 +283,16 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
                                                            global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.NonPublic | global::System.Reflection.BindingFlags.Instance);
                 if (null != onBeforeSet)
                 {
-                    var args = new object[] { "${C}", valueToSet };
+                    var args = _Helpers.PrepareMethodArgs(onBeforeSet,
+                                                          new object[] { "${C}", valueToSet });
+
                     doSet = !object.Equals(onBeforeSet.Invoke(this, args),
                                            false);
 
-                    valueToSet = (${CLR_TYPE})args[1];
+                    if (args.Length > 1)
+                    {
+                        valueToSet = _Helpers.ConvertTo<${CLR_TYPE}>(args[1]);
+                    }
                 }
 
                 if (doSet)
@@ -265,9 +312,8 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
                                                          global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.NonPublic | global::System.Reflection.BindingFlags.Instance);
                     if (null != onSet)
                     {
-                        var args = new object[] { "${C}", valueToSet, oldValue };
-                        args = args.Take(onSet.GetParameters().Length)
-                                   .ToArray();
+                        var args = _Helpers.PrepareMethodArgs(onSet,
+                                                              new object[] { "${C}", valueToSet, oldValue });
 
                         onSet.Invoke(this, args);
                     }
@@ -279,9 +325,8 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
                                                              global::System.Reflection.BindingFlags.Public | global::System.Reflection.BindingFlags.NonPublic | global::System.Reflection.BindingFlags.Instance);
                 if (null != onSetComplete)
                 {
-                    var args = new object[] { "${C}", doSet, this.${FIELD_NAME}, oldValue, valueToSet };
-                    args = args.Take(onSetComplete.GetParameters().Length)
-                               .ToArray();
+                    var args = _Helpers.PrepareMethodArgs(onSetComplete,
+                                                          new object[] { "${C}", doSet, this.${FIELD_NAME}, oldValue, valueToSet });
 
                     onSetComplete.Invoke(this, args);
                 }
@@ -435,6 +480,9 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
 
         extensionsFile += `    partial class ${CLASS_NAME}
     {
+
+        #region Constructors
+
         /// <summary>
         /// Default logic to initialize a new instance of the <see cref="${CLASS_NAME}" /> class.        
         /// </summary>
@@ -443,6 +491,10 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
         {
             this.Set_Columns(initialValues);
         }
+
+        #endregion
+
+        #region Getter and setter event methods
 
         /// <summary>
         /// Optional method that is invoked BEFORE a column value is
@@ -468,7 +520,7 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
 
         /// <summary>
         /// Optional method that is invoked AFTER a column value has been updated
-        /// in the underlying setter,
+        /// in the underlying setter.
         /// </summary>
         /// <param name="column">The name of the column.</param>
         /// <param name="newValue">The new value.</param>
@@ -488,7 +540,10 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
         /// <param name="newValue">The current value of 'value' parameter of setter.</param>
         protected virtual void _OnSetComplete(string column, bool hasBeenSet, object currentValue, object oldValue, object newValue)
         {
-        }        
+        }
+
+        #endregion
+
     }`;
 
         if (context['namespace'].length > 0) {

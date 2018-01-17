@@ -33,6 +33,53 @@ interface AppSettings {
     outDirs: string[];
 }
 
+type EntityFileLoader = (entityFile: string) => PromiseLike<eb_lib_compiler.EntityFile>;
+
+
+const XML_ENTITY_FILE_ROOT = 'entity_baker';
+
+async function loadFromJson(entityFile: string): Promise<eb_lib_compiler.EntityFile> {
+    return JSON.parse(
+        (await eb_lib_helpers.readFile(entityFile)).toString('utf8')
+    );
+}
+
+async function loadFromXml(entityFile: string): Promise<eb_lib_compiler.EntityFile> {
+    return new Promise<eb_lib_compiler.EntityFile>((resolve, reject) => {
+        try {
+            XML.parseString({
+                toString: () => {
+                    return FS.readFileSync(entityFile, 'utf8');
+                }
+            }, {
+                async: true,
+                explicitArray: false,
+                explicitRoot: true,
+                rootName: XML_ENTITY_FILE_ROOT,
+            }, (err, xml) => {
+                if (err) {
+                    reject(err);
+                }
+                else {
+                    if (xml) {
+                        xml = xml[ XML_ENTITY_FILE_ROOT ];
+                    }
+                    
+                    resolve(xml);
+                }
+            });
+        }
+        catch (e) {
+            reject(e);
+        }
+    });
+}
+
+async function loadFromYaml(entityFile: string): Promise<eb_lib_compiler.EntityFile> {
+    return YAML.parse(
+        (await eb_lib_helpers.readFile(entityFile)).toString('utf8')
+    );
+}
 
 function showHelp() {
     eb_lib_helpers.write_ln(`node-entity-baker`);
@@ -52,6 +99,7 @@ function showHelp() {
     process.exit(2);
 }
 
+
 const SETTINGS: AppSettings = {
     doctrine: false,
     entityFramework: false,
@@ -61,7 +109,6 @@ const SETTINGS: AppSettings = {
 };
 
 const CMD_ARGS = Minimist( process.argv.slice(2) );
-let showHelpScreen = false;
 for (const A in CMD_ARGS) {
     const ARGS = eb_lib_helpers.asArray(CMD_ARGS[A]);
 
@@ -108,18 +155,15 @@ for (const A in CMD_ARGS) {
 
         case '?':
         case 'help':
-            showHelpScreen = Enumerable.from(ARGS).all(a => eb_lib_helpers.toBooleanSafe(a));
+            showHelp();
             break;
 
         default:
             eb_lib_helpers.write_err_ln(`Unknown option '${A}'!`);
+            eb_lib_helpers.write_err_ln();
             showHelp();
             break;
     }
-}
-
-if (showHelpScreen) {
-    showHelp();
 }
 
 SETTINGS.inputFiles = eb_lib_helpers.distinctArray(SETTINGS.inputFiles);
@@ -229,56 +273,22 @@ const NEXT_FILE = function (err?: any) {
     try {
         const EF = ENTITY_FILES.shift();
 
-        let entityFileLoader: () => PromiseLike<eb_lib_compiler.EntityFile> = async () => {
-            return JSON.parse(
-                (await eb_lib_helpers.readFile(EF)).toString('utf8')
-            );
-        };
-        
+        let entityFileLoader: EntityFileLoader;
         switch (Path.extname(EF)) {
             case '.xml':
-                entityFileLoader = () => {
-                    return new Promise<eb_lib_compiler.EntityFile>((resolve, reject) => {
-                        try {
-                            XML.parseString({
-                                toString: () => {
-                                    return FS.readFileSync(EF, 'utf8');
-                                }
-                            }, {
-                                async: true,
-                                explicitArray: false,
-                                explicitRoot: true,
-                                rootName: 'entity_baker',
-                            }, (err, xml) => {
-                                if (err) {
-                                    reject(err);
-                                }
-                                else {
-                                    if (xml) {
-                                        xml = xml['entity_baker'];
-                                    }
-                                    
-                                    resolve(xml);
-                                }
-                            });
-                        }
-                        catch (e) {
-                            reject(e);
-                        }
-                    });
-                };
+                entityFileLoader = loadFromXml;
                 break;
 
             case '.yaml':
-                entityFileLoader = async () => {
-                    return YAML.parse(
-                        (await eb_lib_helpers.readFile(EF)).toString('utf8')
-                    );
-                };
+                entityFileLoader = loadFromYaml;
+                break;
+
+            default:
+                entityFileLoader = loadFromJson;
                 break;
         }
 
-        entityFileLoader().then((entityFileObject) => {
+        entityFileLoader(EF).then((entityFileObject) => {
             if (!eb_lib_helpers.isObj<eb_lib_compiler.EntityFile>(entityFileObject)) {
                 NEXT_FILE(null);
                 return;
