@@ -161,7 +161,7 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
     classFile += `/**
  * @Entity @Table(name="${dbTable}")
  **/
-class ${CLASS_NAME} {
+class ${CLASS_NAME} implements \\ArrayAccess {
     /**
      * @see ./Extensions/${TRAIT_FILENAME}
      */
@@ -274,7 +274,7 @@ class ${CLASS_NAME} {
         // 'onBeforeSet($columnName, &$newValue)'
         // method in './Extensions/${TRAIT_FILENAME}'?
         if (\\method_exists($this, 'onBeforeSet')) {
-            $doSet = FALSE !== $this->onBeforeSet('${C}', $newValue);
+            $doSet = FALSE !== $this->onBeforeSet('${C}', $newValue, $this->${C});
         }
 
         if ($doSet) {
@@ -360,6 +360,49 @@ class ${CLASS_NAME} {
     {
         classFile += `
     /**
+     * Writes columns and their values to an array (-like object).
+     * 
+     * @param array|\\ArrayAccess &$target The target where to write the columns to.
+     * @param string|callable [$columnFilter] An optional filter for the columns as regular expression or callable function.
+     * 
+     * @return ${PHP_FULL_CLASS_NAME} That instance.
+     * 
+     * @chainable
+     **/
+    public function copy_columns_to(&$target, $columnFilter = null) {
+        if (null !== $columnFilter) {
+            $columnFilter = (string)$columnFilter;
+
+            if (!\\is_callable($columnFilter)) {
+                $r = $columnFilter;
+
+                $columnFilter = function($columnName) use ($r) {
+                    return 1 === \\preg_match($r, $columnName);
+                };
+            }
+        }
+
+        if (null === $target) {
+            $target = array();
+        }
+
+        foreach ($this->get_columns() as $columnName => $columnValue) {
+            $writeColumn = true;
+            if (null !== $columnFilter) {
+                $writeColumn = FALSE !== \\call_user_func_array(
+                    $columnFilter,
+                    array($columnName, $columnValue)
+                );
+            }
+
+            if ($writeColumn) {
+                $target[ $columnName ] = $columnValue;
+            }
+        }
+
+        return $this;
+    }
+    /**
      * Returns columns (and their values) as array.
      * 
      * @return array The columns and their values.
@@ -382,7 +425,7 @@ class ${CLASS_NAME} {
     }`;
     }
 
-    // set_columns_array()
+    // set_columns()
     {
         classFile += `
     /**
@@ -394,7 +437,7 @@ class ${CLASS_NAME} {
      * 
      * @chainable
      **/
-    public function set_columns_array($columnsToSet) {
+    public function set_columns($columnsToSet) {
         $setters = $this->get_setters();
 
         if ($columnsToSet) {
@@ -409,6 +452,34 @@ class ${CLASS_NAME} {
         }
 
     classFile += `
+
+    /** @inheritdoc **/
+    public function offsetExists($columnName) {
+        return FALSE !== \\array_search(
+            \\trim($columnName),
+            array(${Object.keys(context.columns).map(k => "'" + k + "'").join(', ')})
+        );
+    }
+    /** @inheritdoc **/
+    public function offsetGet($columnName) {
+        return $this->get_columns()[ \\trim($columnName) ];
+    }
+    /** @inheritdoc **/
+    public function offsetSet($columnName, $newValue) {
+        $this->set_columns(
+            array(
+                $columnName => $newValue,
+            )
+        );
+    }
+    /** @inheritdoc **/
+    public function offsetUnset($columnName) {
+        $this->set_columns(
+            array(
+                $columnName => null,
+            )
+        );
+    }
 }
 `;
 
@@ -440,7 +511,7 @@ trait ${TRAIT_NAME} {
      * have another number and kind of parameters has shown here.
      */
     protected function onConstructor($columnsToSet = null) {
-        $this->set_columns_array($columnsToSet);
+        $this->set_columns($columnsToSet);
     }
 
     /**

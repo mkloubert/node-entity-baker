@@ -176,7 +176,7 @@ export enum EntityFramework {
  */
 export interface GenerateClassContext {
     /**
-     * Stored list of column names.
+     * Sorted list of column names.
      */
     readonly columnNames: string[];
     /**

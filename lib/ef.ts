@@ -213,7 +213,7 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
 `;    
 
     classFile += `
-        #region Properties
+        #region Columns
 `;
 
     const GETTERS: { [columnName: string]: string } = {};
@@ -346,6 +346,71 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
         #region Methods
 `;
 
+    // Copy_Columns_To()
+    classFile += `
+        /// <summary>
+        /// Writes columns to a dictionary.
+        /// </summary>
+        /// <param name="target">The dictionary where to write the values to.</param>
+        /// <param name="filter">The optional filter to use.</param>
+        /// <returns>That instance.</returns>
+        public ${CLASS_NAME} Copy_Columns_To(global::System.Collections.Generic.IDictionary<string, object> target, global::System.Func<string, object, bool> filter = null)
+        {
+            var columns = this.Get_Columns();
+
+            if (null == filter)
+            {
+                filter = delegate { return true; };
+            }
+
+            if (null != target)
+            {
+                using (var e = target.GetEnumerator())
+                {
+                    while (e.MoveNext())
+                    {
+                        var entry = e.Current;
+
+                        if (filter(entry.Key, entry.Value))
+                        {
+                            target[entry.Key] = entry.Value;
+                        }                        
+                    }
+                }
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Writes columns to a dictionary.
+        /// </summary>
+        /// <param name="target">The dictionary where to write the values to.</param>
+        /// <param name="pattern">The regular expression to use.</param>
+        /// <returns>That instance.</returns>
+        public ${CLASS_NAME} Copy_Columns_To(global::System.Collections.Generic.IDictionary<string, object> target, string pattern)
+        {
+            return this.Copy_Columns_To(
+                target,
+                new global::System.Text.RegularExpressions.Regex(pattern, global::System.Text.RegularExpressions.RegexOptions.IgnoreCase)
+            );
+        }
+
+        /// <summary>
+        /// Writes columns to a dictionary.
+        /// </summary>
+        /// <param name="target">The dictionary where to write the values to.</param>
+        /// <param name="regex">The regular expression to use.</param>
+        /// <returns>That instance.</returns>
+        public ${CLASS_NAME} Copy_Columns_To(global::System.Collections.Generic.IDictionary<string, object> target, global::System.Text.RegularExpressions.Regex regex)
+        {
+            return this.Copy_Columns_To(
+                target,
+                (columnName, columnValue) => regex.IsMatch(columnName)
+            );
+        }
+`;
+
     // Get_Columns()
     classFile += `
         /// <summary>
@@ -435,20 +500,17 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
         /// <returns>That instance.</returns>
         public ${CLASS_NAME} Set_Columns(global::System.Collections.Generic.IEnumerable<global::System.Collections.Generic.KeyValuePair<string, object>> columns)
         {
-            if (null != columns)
+            var allSetters = this.Get_Setters();
+
+            using (var e = columns?.GetEnumerator())
             {
-                var allSetters = this.Get_Setters();
-
-                using (var e = columns.GetEnumerator())
+                while (true == e?.MoveNext())
                 {
-                    while (true == e?.MoveNext())
-                    {
-                        var columnWithValue = e.Current;
+                    var columnWithValue = e.Current;
 
-                        allSetters[columnWithValue.Key.Trim()](
-                            columnWithValue.Value
-                        );
-                    }
+                    allSetters[columnWithValue.Key.Trim()](
+                        columnWithValue.Value
+                    );
                 }
             }
 
@@ -457,6 +519,34 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
 `;
 
     classFile += `
+        #endregion
+`;
+
+    classFile += `
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets a column value directly via that object.
+        /// </summary>
+        /// <param name="columnName">The name of the column.</param>
+        public object this[string columnName]
+        {
+            get
+            {
+                return this.Get_Columns()[columnName.Trim()];
+            }
+
+            set
+            {
+                this.Set_Columns(
+                    new global::System.Collections.Generic.Dictionary<string, object>()
+                    {
+                        { columnName, value }
+                    }
+                );
+            }
+        }
+
         #endregion
 `;
 
