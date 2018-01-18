@@ -168,7 +168,7 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
                 {
                     var p = method.GetParameters();
 
-                    args = args.Cast<object>()
+                    return args.Cast<object>()
                                .Take(p.Length)
                                .ToArray();
                 }

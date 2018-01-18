@@ -169,7 +169,7 @@ export async function generateClassForEntityFramework(context: eb_lib_compiler.G
                 {
                     var p = method.GetParameters();
 
-                    args = args.Cast<object>()
+                    return args.Cast<object>()
                                .Take(p.Length)
                                .ToArray();
                 }
