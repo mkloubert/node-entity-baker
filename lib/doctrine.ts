@@ -153,9 +153,23 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
     );
 
     const XML_FILENAME = `${context.namespace.concat(CLASS_NAME).join('.')}.dcm.xml`;
+
+    let xmlOutDir: string;
+    if (context.options.doctrine) {
+        xmlOutDir = context.options.doctrine.xmlOutDir;
+    }
+    if (eb_lib_helpers.isEmptyString(xmlOutDir)) {
+        xmlOutDir = context.outDir;
+    }
+    else {
+        if (!Path.isAbsolute(xmlOutDir)) {
+            xmlOutDir = Path.join(context.outDir, xmlOutDir);
+        }
+    }
+
     const XML_FILE_PATH = Path.resolve(
-        Path.join(outDir,
-                    XML_FILENAME)
+        Path.join(xmlOutDir,
+                  XML_FILENAME)
     );
 
     classFile += `/**

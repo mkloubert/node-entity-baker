@@ -26,7 +26,10 @@ import * as YAML from 'yamljs';
 
 
 interface AppSettings {
-    doctrine: boolean;
+    doctrine: {
+        generate: boolean;
+        xmlOutDir?: string;
+    };
     entityFramework: boolean;
     entityFrameworkCore: boolean;
     inputFiles: string[];
@@ -108,13 +111,19 @@ function showHelp(exitCode = 2) {
     eb_lib_helpers.write_ln(` --ef, --entity-framework          Build for Entity Framework.`);
     eb_lib_helpers.write_ln(` --efc, --entity-framework-core    Build for Entity Framework Core.`);
     eb_lib_helpers.write_ln(` -o, --out                         The output directory.`);
+    eb_lib_helpers.write_ln();
+    eb_lib_helpers.write_ln(`Doctrine options:`);
+    eb_lib_helpers.write_ln(` -dxo, --doctrine-xml-out          Custom output directory for XML files.`);
+    eb_lib_helpers.write_ln();
 
     process.exit(exitCode);
 }
 
 
 const SETTINGS: AppSettings = {
-    doctrine: false,
+    doctrine: {
+        generate: false,
+    },
     entityFramework: false,
     entityFrameworkCore: false,
     inputFiles: [],
@@ -185,8 +194,8 @@ const CMD_ARGS = Minimist( process.argv.slice(2) );
         // apply settings...
 
         // frameworks
-        SETTINGS.doctrine = eb_lib_helpers.toBooleanSafe(LOADED_CFG_FILE.doctrine,
-                                                         SETTINGS.doctrine);
+        SETTINGS.doctrine.generate = eb_lib_helpers.toBooleanSafe(LOADED_CFG_FILE.doctrine,
+                                                                  SETTINGS.doctrine);
         SETTINGS.entityFramework = eb_lib_helpers.toBooleanSafe(LOADED_CFG_FILE.entityFramework,
                                                                 SETTINGS.entityFramework);
         SETTINGS.entityFrameworkCore = eb_lib_helpers.toBooleanSafe(LOADED_CFG_FILE.entityFrameworkCore,
@@ -210,6 +219,8 @@ const CMD_ARGS = Minimist( process.argv.slice(2) );
 
 for (const A in CMD_ARGS) {
     const ARGS = eb_lib_helpers.asArray(CMD_ARGS[A]);
+
+    let isKnownOption = true;
 
     switch (A) {
         case '_':
@@ -240,8 +251,8 @@ for (const A in CMD_ARGS) {
 
         case 'd':
         case 'doctrine':
-            SETTINGS.doctrine = Enumerable.from(ARGS)
-                                          .all(a => true === a);
+            SETTINGS.doctrine.generate = Enumerable.from(ARGS)
+                                                   .all(a => true === a);
             break;
 
         case 'ef':
@@ -262,10 +273,36 @@ for (const A in CMD_ARGS) {
             break;
 
         default:
-            eb_lib_helpers.write_err_ln(`Unknown option '${A}'!`);
-            eb_lib_helpers.write_err_ln();
-            showHelp(4);
+            isKnownOption = false;
             break;
+    }
+
+    if (!isKnownOption) {
+        if (A.startsWith('doctrine-')) {
+            isKnownOption = true;
+
+            switch (A) {
+                case 'dxo':
+                case 'doctrine-xml-out':
+                    ARGS.filter(a => {
+                        return eb_lib_helpers.isString(a) &&
+                               !eb_lib_helpers.isEmptyString(a);
+                    }).forEach(a => {
+                        SETTINGS.doctrine.xmlOutDir = a;
+                    });
+                    break;
+
+                default:
+                    isKnownOption = false;
+                    break;
+            }
+        }
+    }
+
+    if (!isKnownOption) {
+        eb_lib_helpers.write_err_ln(`Unknown option '${A}'!`);
+        eb_lib_helpers.write_err_ln();
+        showHelp(4);
     }
 }
 
@@ -318,7 +355,7 @@ let outDirs = Enumerable.from(SETTINGS.outDirs).select(x => {
 
 // targets
 let frameworks: eb_lib_compiler.EntityFramework[] = [];
-if (SETTINGS.doctrine) {
+if (SETTINGS.doctrine.generate) {
     frameworks.push(eb_lib_compiler.EntityFramework.Doctrine);
 }
 if (SETTINGS.entityFramework) {
@@ -473,6 +510,10 @@ const NEXT_FILE = function (err?: any) {
                                                 eb_lib_helpers.write_ln(`[OK]`);
                                             }
                                         }
+                                    },
+
+                                    doctrine: {
+                                        xmlOutDir: SETTINGS.doctrine.xmlOutDir,
                                     }
                                 }).then(() => {
                                     TARGET_COMPLETED(null);

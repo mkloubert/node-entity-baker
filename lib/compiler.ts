@@ -115,6 +115,15 @@ export interface EntityCompilerOptions {
      */
     readonly cwd?: string;
     /**
+     * Special options for Doctrine.
+     */
+    readonly doctrine?: {
+        /**
+         *The directory where to store the XML files.
+         */        
+        readonly xmlOutDir?: string;
+    };
+    /**
      * The file with the entity descriptions.
      */
     readonly file?: EntityFile;
@@ -199,6 +208,10 @@ export interface GenerateClassContext {
      * The namespace.
      */
     readonly 'namespace': string[];
+    /**
+     * Compiler options.
+     */
+    readonly options: EntityCompilerOptions;
     /**
      * The output directory.
      */
@@ -396,6 +409,7 @@ export class EntityCompiler {
                     methods: METHODS,
                     name: CLASS_NAME,
                     'namespace': ns,
+                    options: this.options,
                     outDir: outDir,
                 };
 
