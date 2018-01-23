@@ -33,6 +33,14 @@ interface AppSettings {
     outDirs: string[];
 }
 
+interface ConfigFile {
+    readonly doctrine?: boolean;
+    readonly entityFramework?: boolean;
+    readonly entityFrameworkCore?: boolean;
+    readonly inputFiles: string | string[];
+    readonly outDir?: string;
+}
+
 type EntityFileLoader = (entityFile: string) => PromiseLike<eb_lib_compiler.EntityFile>;
 
 
@@ -81,22 +89,27 @@ async function loadFromYaml(entityFile: string): Promise<eb_lib_compiler.EntityF
     );
 }
 
-function showHelp() {
+function showHelp(exitCode = 2) {
     eb_lib_helpers.write_ln(`node-entity-baker`);
     eb_lib_helpers.write_ln(`Syntax:    [entity files ...] [options]`);
     eb_lib_helpers.write_ln();
     eb_lib_helpers.write_ln(`Examples:  entity-baker --doctrine`);
     eb_lib_helpers.write_ln(`           entity-baker /path/to/entities.json --entity-framework`);
-    eb_lib_helpers.write_ln(`           entity-baker my-entities.yaml --ef-core --out=C:/path/to/output/dir`);
+    eb_lib_helpers.write_ln(`           entity-baker my-entities.yaml --efc --out=C:/path/to/output/dir`);
+    eb_lib_helpers.write_ln(`           entity-baker --config=/path/to/my/config/file.json`);
+    eb_lib_helpers.write_ln();
+    eb_lib_helpers.write_ln(`Entity files:`);
+    eb_lib_helpers.write_ln(`  Those files can be defined in JSON, XML or YAML format.`);
     eb_lib_helpers.write_ln();
     eb_lib_helpers.write_ln(`Options:`);
-    eb_lib_helpers.write_ln(` -?, --h, --help                              Show this help screen.`);
-    eb_lib_helpers.write_ln(` --d, --doctrine                              Build for Doctrine.`);
-    eb_lib_helpers.write_ln(` --ef, --entity-framework                     Build for Entity Framework.`);
-    eb_lib_helpers.write_ln(` --efc, --ef-core, --entity-framework-core    Build for Entity Framework Core.`);
-    eb_lib_helpers.write_ln(` -o, --out                                    The output directory.`);
+    eb_lib_helpers.write_ln(` -?, --h, --help                   Show this help screen.`);
+    eb_lib_helpers.write_ln(` -c, --config                      Loads a config file (JSON, XML or YAML).`);
+    eb_lib_helpers.write_ln(` --d, --doctrine                   Build for Doctrine.`);
+    eb_lib_helpers.write_ln(` --ef, --entity-framework          Build for Entity Framework.`);
+    eb_lib_helpers.write_ln(` --efc, --entity-framework-core    Build for Entity Framework Core.`);
+    eb_lib_helpers.write_ln(` -o, --out                         The output directory.`);
 
-    process.exit(2);
+    process.exit(exitCode);
 }
 
 
@@ -109,6 +122,92 @@ const SETTINGS: AppSettings = {
 };
 
 const CMD_ARGS = Minimist( process.argv.slice(2) );
+
+// config files
+{
+    const CONFIG_FILES = eb_lib_helpers.asArray(CMD_ARGS['c']).concat(CMD_ARGS['config']).filter(a => {
+        return eb_lib_helpers.isString(a) &&
+               !eb_lib_helpers.isEmptyString(a);
+    }).map(cf => {
+        if (!Path.isAbsolute(cf)) {
+            cf = Path.join(process.cwd(), cf);
+        }
+
+        return Path.resolve(cf);
+    }).forEach(cf => {
+        let cfgLoader: () => ConfigFile;
+
+        const CFG = FS.readFileSync(cf, 'utf8');
+        if (eb_lib_helpers.isEmptyString(CFG)) {
+            return;
+        }
+
+        switch (Path.extname(cf)) {
+            case '.xml':
+                cfgLoader = () => {
+                    let xmlFile: ConfigFile;
+                    XML.parseString({
+                        toString: () => CFG,
+                    }, {
+                        async: false,
+                        explicitArray: false,
+                        explicitRoot: true,
+                        rootName: XML_ENTITY_FILE_ROOT,
+                    }, (err, result) => {
+                        if (err) {
+                            throw err;
+                        }
+                        else {
+                            if (result) {
+                                xmlFile = result[ XML_ENTITY_FILE_ROOT ];
+                            }
+                        }
+                    });
+
+                    return xmlFile;
+                };
+                break;
+
+            case '.yaml':
+                cfgLoader = () => YAML.parse(CFG);
+                break;
+
+            default:
+                cfgLoader = () => JSON.parse(CFG);
+                break;
+        }
+
+        const LOADED_CFG_FILE = cfgLoader();
+        if (!LOADED_CFG_FILE) {
+            return;
+        }
+
+        // apply settings...
+
+        // frameworks
+        SETTINGS.doctrine = eb_lib_helpers.toBooleanSafe(LOADED_CFG_FILE.doctrine,
+                                                         SETTINGS.doctrine);
+        SETTINGS.entityFramework = eb_lib_helpers.toBooleanSafe(LOADED_CFG_FILE.entityFramework,
+                                                                SETTINGS.entityFramework);
+        SETTINGS.entityFrameworkCore = eb_lib_helpers.toBooleanSafe(LOADED_CFG_FILE.entityFrameworkCore,
+                                                                    SETTINGS.entityFrameworkCore);
+
+        // input / entity files
+        eb_lib_helpers.asArray(LOADED_CFG_FILE.inputFiles).map(i => {
+            return eb_lib_helpers.toStringSafe(i);
+        }).filter(i => !eb_lib_helpers.isEmptyString(i)).forEach(i => {
+            SETTINGS.inputFiles.push(i);
+        });
+
+        // output directory
+        if (!eb_lib_helpers.isEmptyString(LOADED_CFG_FILE.outDir)) {
+            SETTINGS.outDirs.push(
+                eb_lib_helpers.toStringSafe(LOADED_CFG_FILE.outDir)
+            );
+        }
+    });
+}
+
 for (const A in CMD_ARGS) {
     const ARGS = eb_lib_helpers.asArray(CMD_ARGS[A]);
 
@@ -117,11 +216,14 @@ for (const A in CMD_ARGS) {
             eb_lib_helpers.pushMany(
                 SETTINGS.inputFiles,
                 ARGS.filter(a => {
-                    return !eb_lib_helpers.isEmptyString(a);
-                }).map(x => {
-                    return eb_lib_helpers.toStringSafe(x);
+                    return eb_lib_helpers.isString(a) &&
+                           !eb_lib_helpers.isEmptyString(a);
                 }),
             );
+            break;
+
+        case 'c':
+        case 'config':
             break;
 
         case 'o':
@@ -130,27 +232,28 @@ for (const A in CMD_ARGS) {
             eb_lib_helpers.pushMany(
                 SETTINGS.outDirs,
                 ARGS.filter(a => {
-                    return !eb_lib_helpers.isEmptyString(a);
-                }).map(x => {
-                    return eb_lib_helpers.toStringSafe(x);
+                    return eb_lib_helpers.isString(a) &&
+                           !eb_lib_helpers.isEmptyString(a);
                 }),
             );
             break;
 
         case 'd':
         case 'doctrine':
-            SETTINGS.doctrine = Enumerable.from(ARGS).all(a => eb_lib_helpers.toBooleanSafe(a));
+            SETTINGS.doctrine = Enumerable.from(ARGS)
+                                          .all(a => true === a);
             break;
 
         case 'ef':
         case 'entity-framework':
-            SETTINGS.entityFramework = Enumerable.from(ARGS).all(a => eb_lib_helpers.toBooleanSafe(a));
+            SETTINGS.entityFramework = Enumerable.from(ARGS)
+                                                 .all(a => true === a);
             break;
 
         case 'efc':
-        case 'ef-core':
         case 'entity-framework-core':
-            SETTINGS.entityFrameworkCore = Enumerable.from(ARGS).all(a => eb_lib_helpers.toBooleanSafe(a));
+            SETTINGS.entityFrameworkCore = Enumerable.from(ARGS)
+                                                     .all(a => true === a);
             break;
 
         case '?':
@@ -161,7 +264,7 @@ for (const A in CMD_ARGS) {
         default:
             eb_lib_helpers.write_err_ln(`Unknown option '${A}'!`);
             eb_lib_helpers.write_err_ln();
-            showHelp();
+            showHelp(4);
             break;
     }
 }
@@ -226,7 +329,10 @@ if (SETTINGS.entityFrameworkCore) {
 }
 
 if (frameworks.length < 1) {
-    showHelp();
+    eb_lib_helpers.write_err_ln(`No target defined!`);
+    eb_lib_helpers.write_err_ln();
+
+    showHelp(4);  // no target(s) defined
 }
 
 

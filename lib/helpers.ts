@@ -17,7 +17,7 @@
 
 import * as FS from 'fs';
 import * as Glob from 'glob';
-import * as MergeDeep from 'merge-deep';
+const MergeDeep = require('merge-deep');
 import * as OS from 'os';
 
 

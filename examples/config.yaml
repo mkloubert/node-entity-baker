@@ -1,0 +1,7 @@
+---
+doctrine: true
+entityFramework: false
+entityFrameworkCore: true
+inputFiles:
+- "**/entities.json"
+outDir: "./my-entities"

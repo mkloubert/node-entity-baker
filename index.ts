@@ -15,12 +15,9 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+export * from './lib/compiler';
+
 if (require.main === module) {
     // called from command line
     require('./cli');
-}
-else {
-    // required as a module
-
-   exports.compiler = require('./lib/compiler');
 }

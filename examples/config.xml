@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<entity_baker>
+	<doctrine>true</doctrine>
+	<entityFramework>false</entityFramework>
+	<entityFrameworkCore>true</entityFrameworkCore>
+	<inputFiles>**/entities.json</inputFiles>
+    <outDir>./my-entities</outDir>
+</entity_baker>

@@ -534,7 +534,6 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
             {
                 return this.Get_Columns()[columnName.Trim()];
             }
-
             set
             {
                 this.Set_Columns(
