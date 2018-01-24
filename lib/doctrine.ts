@@ -53,12 +53,6 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
         );
     };
 
-    const IS_JSON = (col: string) => {
-        return eb_lib_compiler.TYPE_JSON === eb_lib_helpers.normalizeString(
-            context.columns[col].type
-        );
-    };
-
     const TO_DOCTRINE_TYPE = (col: string): string => {
         let type = eb_lib_helpers.normalizeString( context.columns[col].type );
 
@@ -119,12 +113,15 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
                 break;
 
             case eb_lib_compiler.TYPE_JSON:
-                type = 'string';
+                type = 'json';
                 break;
 
             case eb_lib_compiler.TYPE_STR:
             case eb_lib_compiler.TYPE_STRING:
-                type = 'string';
+                break;
+
+            case eb_lib_compiler.TYPE_TEXT:
+                type = 'text';
                 break;
 
             case eb_lib_compiler.TYPE_TIME:
@@ -283,17 +280,7 @@ class ${CLASS_NAME} implements \\ArrayAccess {
      **/
     public function ${GETTER_NAME}() {
         $valueToReturn = $this->${C};
-`;
 
-    if (IS_JSON(C)) {
-        classFile += `
-        if (null !== $valueToReturn) {
-            $valueToReturn = \\json_decode($valueToReturn, true);
-        }
-`;
-    }
-
-    classFile += `
         // check if we have a
         // 'onBeforeGet($columnName, &$valueToReturn)'
         // method in './Extensions/${TRAIT_FILENAME}'
@@ -320,17 +307,7 @@ class ${CLASS_NAME} implements \\ArrayAccess {
      **/
     public function ${SETTER_NAME}($newValue) {
         $oldValue = $this->${C};
-`;
 
-            if (IS_JSON(C)) {
-                classFile += `
-        if (null !== $newValue) {
-            $newValue = \\json_encode($newValue);
-        }
-`;
-            }
-
-            classFile += `
         $doSet = true;
 
         // 'onBeforeSet($columnName, &$newValue)'
@@ -685,6 +662,7 @@ function getPHPDataType(entityType: string) {
         case eb_lib_compiler.TYPE_GUID:
         case eb_lib_compiler.TYPE_STR:
         case eb_lib_compiler.TYPE_STRING:
+        case eb_lib_compiler.TYPE_TEXT:
         case eb_lib_compiler.TYPE_UUID:
             return 'string';
             

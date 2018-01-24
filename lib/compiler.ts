@@ -247,6 +247,7 @@ export const TYPE_JSON = 'json';
 export const TYPE_SMALLINT = 'smallint';
 export const TYPE_STR = 'str';
 export const TYPE_STRING = 'string';
+export const TYPE_TEXT = 'text';
 export const TYPE_TIME = 'time';
 export const TYPE_UINT16 = 'int16';
 export const TYPE_UINT32 = 'int32';
@@ -555,6 +556,7 @@ export function toClrType
 
         case TYPE_STR:
         case TYPE_STRING:
+        case TYPE_TEXT:
             type = 'string';
             break;
 

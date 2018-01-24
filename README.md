@@ -117,10 +117,11 @@ Type | [Doctrine]() | [Entity Framework]()
 `int32` | [integer](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#integer) | [System.Int32](https://msdn.microsoft.com/en-us/library/system.int32(v=vs.110).aspx) |
 `int64` | [bigint](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#bigint) | [System.Int64](https://msdn.microsoft.com/en-us/library/system.int64(v=vs.110).aspx) |
 `integer` | [integer](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#integer) | [System.Int32](https://msdn.microsoft.com/en-us/library/system.int32(v=vs.110).aspx) |
-`json` | [string](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#string) | [dynamic](https://msdn.microsoft.com/en-us/library/system.object(v=vs.110).aspx) |
+`json` | [json](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#json) | [dynamic](https://msdn.microsoft.com/en-us/library/system.object(v=vs.110).aspx) |
 `smallint` | [smallint](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#smallint) | [System.Int16](https://msdn.microsoft.com/en-us/library/system.int16(v=vs.110).aspx) |
 `str` | [string](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#string) | [System.String](https://msdn.microsoft.com/en-us/library/system.string(v=vs.110).aspx) |
 `string` | [string](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#string) | [System.String](https://msdn.microsoft.com/en-us/library/system.string(v=vs.110).aspx) |
+`text` | [text](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#text) | [System.String](https://msdn.microsoft.com/en-us/library/system.string(v=vs.110).aspx) |
 `time` | [time](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#time) | [System.TimeSpan](https://msdn.microsoft.com/en-us/library/system.timespan(v=vs.110).aspx) |
 `uint16` | [smallint](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#smallint) | [System.UInt16](https://msdn.microsoft.com/en-us/library/system.uint16(v=vs.110).aspx) |
 `uint32` | [integer](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#integer) | [System.UInt32](https://msdn.microsoft.com/en-us/library/system.uint32(v=vs.110).aspx) |
