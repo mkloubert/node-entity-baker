@@ -101,8 +101,8 @@ EntityBaker.compile({
 Type | [Doctrine]() | [Entity Framework]()
 ------------ | ------------- | -------------
 `bigint` | [bigint](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#bigint) | [System.Int64](https://msdn.microsoft.com/en-us/library/system.int64(v=vs.110).aspx) |
-`bin` | [blob](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#blob) | [System.Byte\[\]](https://msdn.microsoft.com/en-us/library/system.byte(v=vs.110).aspx) |
-`binary` | [blob](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#blob) | [System.Byte\[\]](https://msdn.microsoft.com/en-us/library/system.byte(v=vs.110).aspx) |
+`bin` | [binary](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#binary) | [System.Byte\[\]](https://msdn.microsoft.com/en-us/library/system.byte(v=vs.110).aspx) |
+`binary` | [binary](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#binary) | [System.Byte\[\]](https://msdn.microsoft.com/en-us/library/system.byte(v=vs.110).aspx) |
 `blob` | [blob](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#blob) | [System.Byte\[\]](https://msdn.microsoft.com/en-us/library/system.byte(v=vs.110).aspx) |
 `bool` | [boolean](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#boolean) | [System.Boolean](https://msdn.microsoft.com/en-us/library/system.boolean(v=vs.110).aspx) |
 `boolean` | [boolean](http://docs.doctrine-project.org/projects/doctrine-dbal/en/latest/reference/types.html#boolean) | [System.Boolean](https://msdn.microsoft.com/en-us/library/system.boolean(v=vs.110).aspx) |

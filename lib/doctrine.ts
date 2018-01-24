@@ -65,6 +65,9 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
 
             case eb_lib_compiler.TYPE_BIN:
             case eb_lib_compiler.TYPE_BINARY:
+                type = 'binary';
+                break;
+
             case eb_lib_compiler.TYPE_BLOB:
                 type = 'blob';
                 break;
