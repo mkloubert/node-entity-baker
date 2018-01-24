@@ -201,7 +201,7 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
             classFile += `
             get
             {
-                var valueToReturn = ${FIELD_NAME};
+                var valueToReturn = this.${FIELD_NAME};
                 
                 // '_OnBeforeGet(string column, ref object valueToReturn)'
                 // method in './User.Extensions.cs'?
