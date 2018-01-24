@@ -79,6 +79,18 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
                 type = 'boolean';
                 break;
 
+            case eb_lib_compiler.TYPE_DATE:
+                type = 'date';
+                break;
+
+            case eb_lib_compiler.TYPE_DATETIME:
+                type = 'datetime';
+                break;
+
+            case eb_lib_compiler.TYPE_DATETIME_TZ:
+                type = 'datetimetz';
+                break;
+
             case eb_lib_compiler.TYPE_DECIMAL:
                 type = 'decimal';
                 break;
@@ -110,6 +122,10 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
             case eb_lib_compiler.TYPE_STR:
             case eb_lib_compiler.TYPE_STRING:
                 type = 'string';
+                break;
+
+            case eb_lib_compiler.TYPE_TIME:
+                type = 'time';
                 break;
 
             case eb_lib_compiler.TYPE__DEFAULT:
@@ -684,6 +700,12 @@ function getPHPDataType(entityType: string) {
         case eb_lib_compiler.TYPE_BOOL:
         case eb_lib_compiler.TYPE_BOOLEAN:
             return 'boolean';
+
+        case eb_lib_compiler.TYPE_DATE:
+        case eb_lib_compiler.TYPE_DATETIME:
+        case eb_lib_compiler.TYPE_DATETIME_TZ:
+        case eb_lib_compiler.TYPE_TIME:
+            return '\\DateTime';
 
         case eb_lib_compiler.TYPE_FLOAT:
             return 'float';

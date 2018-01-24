@@ -232,6 +232,9 @@ export const TYPE_BINARY = 'binary';
 export const TYPE_BLOB = 'blob';
 export const TYPE_BOOL = 'bool';
 export const TYPE_BOOLEAN = 'boolean';
+export const TYPE_DATE = 'date';
+export const TYPE_DATETIME = 'datetime';
+export const TYPE_DATETIME_TZ = 'datetimetz';
 export const TYPE_FLOAT = 'float';
 export const TYPE_DECIMAL = 'decimal';
 export const TYPE_GUID = 'guid';
@@ -244,6 +247,7 @@ export const TYPE_JSON = 'json';
 export const TYPE_SMALLINT = 'smallint';
 export const TYPE_STR = 'str';
 export const TYPE_STRING = 'string';
+export const TYPE_TIME = 'time';
 export const TYPE_UUID = 'uuid';
 
 /**
@@ -509,6 +513,15 @@ export function toClrType
             type = 'bool';
             break;
 
+        case TYPE_DATE:
+        case TYPE_DATETIME:
+            type = 'global::System.DateTime';
+            break;
+
+        case TYPE_DATETIME_TZ:
+            type = 'global::System.DateTimeOffset';
+            break;
+
         case TYPE_DECIMAL:
             type = 'decimal';
             break;
@@ -542,6 +555,10 @@ export function toClrType
             type = 'string';
             break;
 
+        case TYPE_TIME:
+            type = 'System.TimeSpan';
+            break;
+
         case TYPE__DEFAULT:
             type = 'string';
             if (isID()) {
@@ -561,7 +578,10 @@ export function toClrType
             case 'int':
             case 'long':
             case 'short':
+            case 'global::System.DateTime':
+            case 'global::System.DateTimeOffset':
             case 'global::System.Guid':
+            case 'System.TimeSpan':
                 type += '?';
                 break;
         }
