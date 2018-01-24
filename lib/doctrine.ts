@@ -63,9 +63,17 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
         let type = eb_lib_helpers.normalizeString( context.columns[col].type );
 
         switch (type) {
-            case eb_lib_compiler.TYPE_STR:
-            case eb_lib_compiler.TYPE_STRING:
-                type = 'string';
+            case eb_lib_compiler.TYPE_BIGINT:
+            case eb_lib_compiler.TYPE_INT64:
+                type = 'bigint';
+                break;
+
+            case eb_lib_compiler.TYPE_DECIMAL:
+                type = 'decimal';
+                break;
+
+            case eb_lib_compiler.TYPE_FLOAT:
+                type = 'float';
                 break;
 
             case eb_lib_compiler.TYPE_INT:
@@ -74,13 +82,18 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
                 type = 'integer';
                 break;
 
+            case eb_lib_compiler.TYPE_INT16:
+            case eb_lib_compiler.TYPE_SMALLINT:
+                type = 'smallint';
+                break;
+
             case eb_lib_compiler.TYPE_JSON:
                 type = 'string';
                 break;
 
-            case eb_lib_compiler.TYPE_BIGINT:
-            case eb_lib_compiler.TYPE_INT64:
-                type = 'bigint';
+            case eb_lib_compiler.TYPE_STR:
+            case eb_lib_compiler.TYPE_STRING:
+                type = 'string';
                 break;
 
             case eb_lib_compiler.TYPE__DEFAULT:

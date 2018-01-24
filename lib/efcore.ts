@@ -79,50 +79,11 @@ export async function generateClassForEntityFrameworkCore(context: eb_lib_compil
     };
 
     const TO_EF_TYPE = (col: string): string => {
-        let type = eb_lib_helpers.normalizeString( context.columns[col].type );
-
-        switch (type) {
-            case eb_lib_compiler.TYPE_STR:
-            case eb_lib_compiler.TYPE_STRING:
-                type = 'string';
-                break;
-
-            case eb_lib_compiler.TYPE_INT:
-            case eb_lib_compiler.TYPE_INT32:
-            case eb_lib_compiler.TYPE_INTEGER:
-                type = 'int';
-                break;
-
-            case eb_lib_compiler.TYPE_JSON:
-                type = 'dynamic';
-                break;
-
-            case eb_lib_compiler.TYPE_BIGINT:
-            case eb_lib_compiler.TYPE_INT64:
-                type = 'long';
-                break;
-
-            case eb_lib_compiler.TYPE__DEFAULT:
-                type = 'string';
-                if (IS_ID(col)) {
-                    type = 'int';
-                }
-                break;
-
-            default:
-                throw new Error(`The data type '${type}' is not supported by Entity Framework!`);
-        }
-
-        if (CAN_BE_NULL(col)) {
-            switch (type) {
-                case 'int':
-                case 'long':
-                    type += '?';
-                    break;
-            }
-        }
-
-        return type;
+        return eb_lib_compiler.toClrType(
+            context.columns[col].type,
+            () => CAN_BE_NULL(col),
+            () => IS_ID(col),
+        );
     };
 
     let classFile = `using System.Linq;

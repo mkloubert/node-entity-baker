@@ -227,11 +227,15 @@ export const DEFAULT_ENTITY_FILE = 'entities.json';
 // data types
 export const TYPE__DEFAULT = '';
 export const TYPE_BIGINT = 'bigint';
+export const TYPE_FLOAT = 'float';
+export const TYPE_DECIMAL = 'decimal';
 export const TYPE_INT = 'int';
+export const TYPE_INT16 = 'int16';
 export const TYPE_INT32 = 'int32';
 export const TYPE_INTEGER = 'integer';
 export const TYPE_INT64 = 'int64';
 export const TYPE_JSON = 'json';
+export const TYPE_SMALLINT = 'smallint';
 export const TYPE_STR = 'str';
 export const TYPE_STRING = 'string';
 
@@ -488,4 +492,81 @@ export function parseForClass(val: any): string | false {
     }
 
     return false;
+}
+
+/**
+ * Converts a data type from a entity file to a CLR type.
+ * 
+ * @param {string} type The entity type.
+ * @param {Function} canBeNull The function that provides if value can be (null) or not.
+ * @param {Function} isID The function that provides if value is an ID value or not.
+ * 
+ * @return {string} The CLR type.
+ */
+export function toClrType
+(
+    type: string,
+    canBeNull: () => boolean,
+    isID: () => boolean
+)
+{
+    type = eb_lib_helpers.normalizeString(type);
+    switch (type) {
+        case TYPE_BIGINT:
+        case TYPE_INT64:
+            type = 'long';
+            break;
+
+        case TYPE_DECIMAL:
+            type = 'decimal';
+            break;
+
+        case TYPE_FLOAT:
+            type = 'float';
+            break;
+
+        case TYPE_INT:
+        case TYPE_INT32:
+        case TYPE_INTEGER:
+            type = 'int';
+            break;
+
+        case TYPE_INT16:
+        case TYPE_SMALLINT:
+            type = 'short';
+            break;
+
+        case TYPE_JSON:
+            type = 'dynamic';
+            break;
+
+        case TYPE_STR:
+        case TYPE_STRING:
+            type = 'string';
+            break;
+
+        case TYPE__DEFAULT:
+            type = 'string';
+            if (isID()) {
+                type = 'int';
+            }
+            break;
+
+        default:
+            throw new Error(`The data type '${type}' is not supported by CLR!`);
+    }
+
+    if (canBeNull()) {
+        switch (type) {
+            case 'decimal':
+            case 'float':
+            case 'int':
+            case 'long':
+            case 'short':
+                type += '?';
+                break;
+        }
+    }
+
+    return type;
 }

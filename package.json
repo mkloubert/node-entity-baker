@@ -1,6 +1,6 @@
 {
   "name": "entity-baker",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Generates simple and powerful entity classes for ORM systems, like Doctrine and/or Entity Framework.",
   "main": "index.js",
   "bin": {
