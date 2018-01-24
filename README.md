@@ -25,8 +25,8 @@ First create a `entities.json` file inside your working directory (can also be i
     "namespace": "MarcelJoachimKloubert.Database",
 
     "entities": {
-        "User": {
-            "table": "users",
+        "Log": {
+            "table": "logs",
 
             "columns": {
                 "id": {
@@ -34,9 +34,18 @@ First create a `entities.json` file inside your working directory (can also be i
                     "auto": true,
                     "type": "int32"
                 },
-
-                "name": "string",
-                "email": "string",
+                
+                "level": {
+                    "null": true,
+                    "type": "int16"
+                },
+                
+                "message": "string",
+                "tag": {
+                    "null": true,
+                    "type": "string"
+                },
+                
                 "context": {
                     "null": true,
                     "type": "json"
