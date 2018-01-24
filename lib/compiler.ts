@@ -248,6 +248,9 @@ export const TYPE_SMALLINT = 'smallint';
 export const TYPE_STR = 'str';
 export const TYPE_STRING = 'string';
 export const TYPE_TIME = 'time';
+export const TYPE_UINT16 = 'int16';
+export const TYPE_UINT32 = 'int32';
+export const TYPE_UINT64 = 'int64';
 export const TYPE_UUID = 'uuid';
 
 /**
@@ -559,6 +562,18 @@ export function toClrType
             type = 'System.TimeSpan';
             break;
 
+        case TYPE_UINT16:
+            type = 'ushort';
+            break;
+
+        case TYPE_UINT32:
+            type = 'uint';
+            break;
+
+        case TYPE_UINT64:
+            type = 'ulong';
+            break;
+
         case TYPE__DEFAULT:
             type = 'string';
             if (isID()) {
@@ -578,6 +593,9 @@ export function toClrType
             case 'int':
             case 'long':
             case 'short':
+            case 'ushort':
+            case 'uint':
+            case 'ulong':
             case 'global::System.DateTime':
             case 'global::System.DateTimeOffset':
             case 'global::System.Guid':

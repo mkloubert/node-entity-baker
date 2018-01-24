@@ -65,6 +65,7 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
         switch (type) {
             case eb_lib_compiler.TYPE_BIGINT:
             case eb_lib_compiler.TYPE_INT64:
+            case eb_lib_compiler.TYPE_UINT64:
                 type = 'bigint';
                 break;
 
@@ -107,11 +108,13 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
             case eb_lib_compiler.TYPE_INT:
             case eb_lib_compiler.TYPE_INT32:
             case eb_lib_compiler.TYPE_INTEGER:
+            case eb_lib_compiler.TYPE_UINT32:
                 type = 'integer';
                 break;
 
             case eb_lib_compiler.TYPE_INT16:
             case eb_lib_compiler.TYPE_SMALLINT:
+            case eb_lib_compiler.TYPE_UINT16:
                 type = 'smallint';
                 break;
 
@@ -687,9 +690,13 @@ function getPHPDataType(entityType: string) {
             
         case eb_lib_compiler.TYPE_BIGINT:
         case eb_lib_compiler.TYPE_INT:
+        case eb_lib_compiler.TYPE_INT16:
         case eb_lib_compiler.TYPE_INT32:
         case eb_lib_compiler.TYPE_INT64:
         case eb_lib_compiler.TYPE_INTEGER:
+        case eb_lib_compiler.TYPE_UINT16:
+        case eb_lib_compiler.TYPE_UINT32:
+        case eb_lib_compiler.TYPE_UINT64:
             return 'integer';
 
         case eb_lib_compiler.TYPE_BIN:
