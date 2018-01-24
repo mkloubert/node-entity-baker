@@ -68,12 +68,28 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
                 type = 'bigint';
                 break;
 
+            case eb_lib_compiler.TYPE_BIN:
+            case eb_lib_compiler.TYPE_BINARY:
+            case eb_lib_compiler.TYPE_BLOB:
+                type = 'blob';
+                break;
+
+            case eb_lib_compiler.TYPE_BOOL:
+            case eb_lib_compiler.TYPE_BOOLEAN:
+                type = 'boolean';
+                break;
+
             case eb_lib_compiler.TYPE_DECIMAL:
                 type = 'decimal';
                 break;
 
             case eb_lib_compiler.TYPE_FLOAT:
                 type = 'float';
+                break;
+
+            case eb_lib_compiler.TYPE_GUID:
+            case eb_lib_compiler.TYPE_UUID:
+                type = 'guid';
                 break;
 
             case eb_lib_compiler.TYPE_INT:
@@ -162,7 +178,7 @@ export async function generateClassForDoctrine(context: eb_lib_compiler.Generate
     const TRAIT_FILENAME = `${TRAIT_NAME}.php`;
     const TRAIT_FILE_PATH = Path.resolve(
         Path.join(EXTENSIONS_DIR,
-                    TRAIT_FILENAME)
+                  TRAIT_FILENAME)
     );
 
     const XML_FILENAME = `${context.namespace.concat(CLASS_NAME).join('.')}.dcm.xml`;
@@ -244,7 +260,7 @@ class ${CLASS_NAME} implements \\ArrayAccess {
     /**
      * Gets the value of '${C}' column.
      * 
-     * @return ${eb_lib_compiler.getPHPDataType(COLUMN.type)} The value of '${C}'.
+     * @return ${getPHPDataType(COLUMN.type)} The value of '${C}'.
      **/
     public function ${GETTER_NAME}() {
         $valueToReturn = $this->${C};
@@ -277,7 +293,7 @@ class ${CLASS_NAME} implements \\ArrayAccess {
     /**
      * Sets the value for '${C}' column.
      * 
-     * @param ${eb_lib_compiler.getPHPDataType(COLUMN.type)} $newValue The new value.
+     * @param ${getPHPDataType(COLUMN.type)} $newValue The new value.
      * 
      * @return ${PHP_FULL_CLASS_NAME} That instance.
      * 
@@ -640,4 +656,38 @@ trait ${TRAIT_NAME} {
 </doctrine-mapping>`;
 
     await eb_lib_helpers.writeFile(XML_FILE_PATH, xmlFile, 'utf8');
+}
+
+
+function getPHPDataType(entityType: string) {
+    switch (eb_lib_helpers.normalizeString(entityType)) {
+        case eb_lib_compiler.TYPE__DEFAULT:
+        case eb_lib_compiler.TYPE_DECIMAL:
+        case eb_lib_compiler.TYPE_GUID:
+        case eb_lib_compiler.TYPE_STR:
+        case eb_lib_compiler.TYPE_STRING:
+        case eb_lib_compiler.TYPE_UUID:
+            return 'string';
+            
+        case eb_lib_compiler.TYPE_BIGINT:
+        case eb_lib_compiler.TYPE_INT:
+        case eb_lib_compiler.TYPE_INT32:
+        case eb_lib_compiler.TYPE_INT64:
+        case eb_lib_compiler.TYPE_INTEGER:
+            return 'integer';
+
+        case eb_lib_compiler.TYPE_BIN:
+        case eb_lib_compiler.TYPE_BINARY:
+        case eb_lib_compiler.TYPE_BLOB:
+            return 'resource';
+
+        case eb_lib_compiler.TYPE_BOOL:
+        case eb_lib_compiler.TYPE_BOOLEAN:
+            return 'boolean';
+
+        case eb_lib_compiler.TYPE_FLOAT:
+            return 'float';
+    }
+
+    return 'mixed';
 }

@@ -227,8 +227,14 @@ export const DEFAULT_ENTITY_FILE = 'entities.json';
 // data types
 export const TYPE__DEFAULT = '';
 export const TYPE_BIGINT = 'bigint';
+export const TYPE_BIN = 'bin';
+export const TYPE_BINARY = 'binary';
+export const TYPE_BLOB = 'blob';
+export const TYPE_BOOL = 'bool';
+export const TYPE_BOOLEAN = 'boolean';
 export const TYPE_FLOAT = 'float';
 export const TYPE_DECIMAL = 'decimal';
+export const TYPE_GUID = 'guid';
 export const TYPE_INT = 'int';
 export const TYPE_INT16 = 'int16';
 export const TYPE_INT32 = 'int32';
@@ -238,6 +244,7 @@ export const TYPE_JSON = 'json';
 export const TYPE_SMALLINT = 'smallint';
 export const TYPE_STR = 'str';
 export const TYPE_STRING = 'string';
+export const TYPE_UUID = 'uuid';
 
 /**
  * An entity compiler.
@@ -451,32 +458,6 @@ export async function compile(opts?: EntityCompilerOptions) {
 }
 
 /**
- * Returns the PHP type for an entity type.
- * 
- * @param {string} entityType The entity type.
- * 
- * @return {string} The PHP type.
- */
-export function getPHPDataType(entityType: string) {
-    switch (eb_lib_helpers.normalizeString(entityType)) {
-        case TYPE__DEFAULT:
-        case TYPE_STR:
-        case TYPE_STRING:
-            return 'string';
-
-        case TYPE_BIGINT:
-        case TYPE_INT:
-        case TYPE_INT32:
-        case TYPE_INT64:
-        case TYPE_INTEGER:
-            return 'integer';
-
-        default:
-            return 'mixed';
-    }
-}
-
-/**
  * Parses a value for a class or for use in a class.
  * 
  * @param {any} val The input value.
@@ -517,12 +498,28 @@ export function toClrType
             type = 'long';
             break;
 
+        case TYPE_BIN:
+        case TYPE_BINARY:
+        case TYPE_BLOB:
+            type = 'byte[]';
+            break;
+
+        case TYPE_BOOL:
+        case TYPE_BOOLEAN:
+            type = 'bool';
+            break;
+
         case TYPE_DECIMAL:
             type = 'decimal';
             break;
 
         case TYPE_FLOAT:
             type = 'float';
+            break;
+
+        case TYPE_GUID:
+        case TYPE_UUID:
+            type = 'global::System.Guid';
             break;
 
         case TYPE_INT:
@@ -558,11 +555,13 @@ export function toClrType
 
     if (canBeNull()) {
         switch (type) {
+            case 'bool':
             case 'decimal':
             case 'float':
             case 'int':
             case 'long':
             case 'short':
+            case 'global::System.Guid':
                 type += '?';
                 break;
         }
