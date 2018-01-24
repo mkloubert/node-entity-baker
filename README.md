@@ -130,4 +130,4 @@ Type | [Doctrine]() | [Entity Framework]()
 If you do not define a data type, it set to
 
 * `int32`, if the column is a primary key, or...
-* `string`
+* `string`, if nothing else matches
