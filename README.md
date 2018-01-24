@@ -37,7 +37,10 @@ First create a `entities.json` file inside your working directory (can also be i
 
                 "name": "string",
                 "email": "string",
-                "context": "json"
+                "context": {
+                    "null": true,
+                    "type": "json"
+                }
             }
         }
     }
