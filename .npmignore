@@ -2,6 +2,7 @@
 /**/*.ts
 !/**/*.d.ts
 /out
+/.git
 /.vscode
 /entities.json
 /entities.yaml
