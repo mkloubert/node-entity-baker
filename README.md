@@ -1,5 +1,5 @@
-[![npm](https://img.shields.io/npm/v/node-entity-baker.svg)](https://www.npmjs.com/package/node-entity-baker)
-[![npm](https://img.shields.io/npm/dt/node-entity-baker.svg?label=npm%20downloads)](https://www.npmjs.com/package/node-entity-baker)
+[![npm](https://img.shields.io/npm/v/entity-baker.svg)](https://www.npmjs.com/package/entity-baker)
+[![npm](https://img.shields.io/npm/dt/entity-baker.svg?label=npm%20downloads)](https://www.npmjs.com/package/entity-baker)
 
 # node-entity-baker
 

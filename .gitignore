@@ -1,6 +1,7 @@
 /node_modules
 /**/*.map
 /**/*.js
+/**/*.d.ts
 /out
 /entities.json
 /entities.xml

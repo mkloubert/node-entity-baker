@@ -1,5 +1,6 @@
 /**/*.map
 /**/*.ts
+!/**/*.d.ts
 /out
 /.vscode
 /entities.json
