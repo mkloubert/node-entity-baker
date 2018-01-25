@@ -8,3 +8,5 @@
 /pushall.sh
 /test
 /test.ts
+/tsdoc
+/typedoc.sh

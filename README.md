@@ -147,3 +147,20 @@ If you do not define a data type, it set to
 
 * `int32`, if the column is a primary key, or...
 * `string`, if nothing else matches
+
+## Support and contribute [[&uarr;](#table-of-contents)]
+
+If you like the module, you can support the project by sending a [donation via PayPal](https://paypal.me/MarcelKloubert) to [me](https://github.com/mkloubert).
+
+To contribute, you can [open an issue](https://github.com/mkloubert/node-entity-baker/issues) and/or fork this repository.
+
+To work with the code:
+
+* clone [this repository](https://github.com/mkloubert/node-entity-baker)
+* create and change to a new branch, like `git checkout -b my_new_feature`
+* run `npm install` from your project folder
+* edit and debug in your favorite editor, like [Visual Studio Code](https://code.visualstudio.com)
+* commit your changes to your new branch and sync it with your forked GitHub repo
+* make a [pull request](https://github.com/mkloubert/node-entity-baker/pulls)
+
+The API documentation can be found [here](https://mkloubert.github.io/node-entity-baker/).
