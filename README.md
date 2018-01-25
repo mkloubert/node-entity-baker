@@ -1,3 +1,6 @@
+[![npm](https://img.shields.io/npm/v/node-entity-baker.svg)](https://www.npmjs.com/package/node-entity-baker)
+[![npm](https://img.shields.io/npm/dt/node-entity-baker.svg?label=npm%20downloads)](https://www.npmjs.com/package/node-entity-baker)
+
 # node-entity-baker
 
 [Node.js](https://nodejs.org) application / library, which generates simple and powerful entity classes for [ORM](https://en.wikipedia.org/wiki/Object-relational_mapping) systems, like [Doctrine](http://www.doctrine-project.org) and/or [Entity Framework](https://docs.microsoft.com/en-us/ef/), wriiten in [TypeScript](https://www.typescriptlang.org).
